@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "NaiveStateMachine",
+	"Description": "https://github.com/cllpyl/NaiveStateMachine.git",
+	"Category": "Naive",
+	"CreatedBy": "Naive Studio",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "NaiveStateMachine",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "NaiveStateMachineEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
