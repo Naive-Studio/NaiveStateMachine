@@ -161,7 +161,7 @@ void SNaiveStateMachineNode_Transition::GetNodeInfoPopups(FNodeInfoContext* Cont
 
 }
 
-void SNaiveStateMachineNode_Transition::MoveTo(const FVector2D& NewPosition, FNodeSet& NodeFilter)
+void SNaiveStateMachineNode_Transition::MoveTo(const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
 {
 	// Ignored; position is set by the location of the attached state nodes
 }

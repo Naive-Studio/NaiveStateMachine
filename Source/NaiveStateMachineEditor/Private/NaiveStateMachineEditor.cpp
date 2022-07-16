@@ -61,7 +61,7 @@ public:
 FNaiveStateMachineEditor::FNaiveStateMachineEditor()
 	:INaiveStateMachineEditor()
 {
-	OnPackageSavedDelegateHandle = UPackage::PackageSavedEvent.AddRaw(this, &FNaiveStateMachineEditor::OnPackageSaved);
+	OnPackageSavedDelegateHandle = UPackage::PackageSavedWithContextEvent.AddRaw(this, &FNaiveStateMachineEditor::OnPackageSaved);
 
 	bCheckDirtyOnAssetSave = true;
 
@@ -72,7 +72,7 @@ FNaiveStateMachineEditor::FNaiveStateMachineEditor()
 
 FNaiveStateMachineEditor::~FNaiveStateMachineEditor()
 {
-	UPackage::PackageSavedEvent.Remove(OnPackageSavedDelegateHandle);
+	UPackage::PackageSavedWithContextEvent.Remove(OnPackageSavedDelegateHandle);
 	FNaiveStateMachineCommands::Unregister();
 }
 
@@ -317,7 +317,7 @@ bool FNaiveStateMachineEditor::IsPropertyEditable() const
 	return FocusedGraphEd.IsValid() && FocusedGraphEd->GetCurrentGraph() && FocusedGraphEd->GetCurrentGraph()->bEditable;
 }
 
-void FNaiveStateMachineEditor::OnPackageSaved(const FString& PackageFileName, UObject* Outer)
+void FNaiveStateMachineEditor::OnPackageSaved(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext PostSaveContext)
 {
 	SaveAsset_Execute();
 }

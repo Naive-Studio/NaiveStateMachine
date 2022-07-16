@@ -8,6 +8,7 @@
 #include "Layout/Visibility.h"
 #include "GraphEditor.h"
 #include "INaiveStateMachineEditor.h"
+#include "UObject/ObjectSaveContext.h"
 #include "WorkflowOrientedApp/WorkflowTabManager.h"
 
 /**
@@ -33,7 +34,7 @@ public:
 	/** End INaiveStateMachineEditor Interface*/
 
 	bool IsPropertyEditable() const;
-	void OnPackageSaved(const FString& PackageFileName, UObject* Outer);
+	void OnPackageSaved(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext PostSaveContext);
 	void OnFinishedChangingProperties(const FPropertyChangedEvent& PropertyChangedEvent);
 	void OnGraphNodeDoubleClicked(class UEdGraphNode* Node);
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
