@@ -27,8 +27,8 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "AssetToolsModule.h"
 #include "AssetRegistryModule.h"
-#include "NaiveStateNode_Blueprint.h"
-#include "NaiveTransitionNode_Blueprint.h"
+#include "StateMachine/NaiveStateNode_Blueprint.h"
+#include "StateMachine/NaiveTransitionNode_Blueprint.h"
 #include "WorkflowOrientedApp/WorkflowUObjectDocuments.h"
 
 #define LOCTEXT_NAMESPACE "NaiveStateMachineEditor"
