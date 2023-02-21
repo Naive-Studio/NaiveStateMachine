@@ -16,7 +16,7 @@ FNaiveStateMachineAssetTypeActions::FNaiveStateMachineAssetTypeActions(EAssetTyp
 
 FText FNaiveStateMachineAssetTypeActions::GetName() const
 {
-	return NSLOCTEXT("AssetTypeActions_StateMachine", "AssetTypeActions_StateMachine", "State Machine");
+	return NSLOCTEXT("AssetTypeActions_StateMachine", "AssetTypeActions_StateMachine", "Naive State Machine");
 }
 
 FColor FNaiveStateMachineAssetTypeActions::GetTypeColor() const
@@ -39,7 +39,7 @@ void FNaiveStateMachineAssetTypeActions::OpenAssetEditor(const TArray<UObject*>&
 		if (StateMachineAsset != nullptr)
 		{
 			bool bFoundExisting = false;
-			const bool bFocusIfOpen = false;
+			constexpr bool bFocusIfOpen = false;
 
 			FNaiveStateMachineEditor* ExistingInstance = static_cast<FNaiveStateMachineEditor*>(GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->FindEditorForAsset(StateMachineAsset,bFocusIfOpen));
 			if (ExistingInstance != nullptr && ExistingInstance->GetStateMachineAsset() == nullptr)

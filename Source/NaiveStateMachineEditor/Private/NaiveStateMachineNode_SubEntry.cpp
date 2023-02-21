@@ -48,7 +48,7 @@ TSharedPtr<SToolTip> SNaiveStateMachineNode_SubEntry::GetComplexTooltip()
 		.AutoHeight()
 		[
 			SNew(STextBlock)
-			.TextStyle(FEditorStyle::Get(), "NormalText.Important")
+			.TextStyle(FAppStyle::Get(), "NormalText.Important")
 		.Text(Result)
 		]
 		];

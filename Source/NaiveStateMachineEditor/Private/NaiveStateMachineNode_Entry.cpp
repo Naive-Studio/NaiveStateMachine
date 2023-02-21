@@ -68,7 +68,7 @@ void SNaiveStateMachineNode_Entry::UpdateGraphNode()
 		.VAlign(VAlign_Center)
 		[
 			SNew(SBorder)
-			.BorderImage(FEditorStyle::GetBrush("Graph.StateNode.Body"))
+			.BorderImage(FAppStyle::GetBrush("Graph.StateNode.Body"))
 		.Padding(0)
 		.BorderBackgroundColor(NaiveStateMachineEditorColors::NodeBorder::Default)
 		[

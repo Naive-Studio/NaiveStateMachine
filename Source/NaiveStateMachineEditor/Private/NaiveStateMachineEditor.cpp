@@ -3,13 +3,9 @@
 
 #include "NaiveStateMachineEditor.h"
 #include "StateMachine/NaiveStateMachine.h"
-#include "StateMachine/NaiveStateNode.h"
-#include "StateMachine/NaiveTransitionNode.h"
-
 #include "NaiveStateMachineGraph.h"
 #include "NaiveStateMachineGraphSchema.h"
 #include "NaiveStateMachineEditorModule.h"
-#include "NaiveStateMachineNode_State.h"
 #include "NaiveStateMachineNode_SubMachine.h"
 #include "NaiveStateMachineNode_Transition.h"
 #include "NaiveStateMachineEditorFactories.h"
@@ -26,7 +22,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "AssetToolsModule.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "StateMachine/NaiveStateNode_Blueprint.h"
 #include "StateMachine/NaiveTransitionNode_Blueprint.h"
 #include "WorkflowOrientedApp/WorkflowUObjectDocuments.h"
@@ -40,12 +36,11 @@ const FName FNaiveStateMachineEditor::StateMachineMode = TEXT("StateMachine");
 class FNaiveStateMachineCommands : public TCommands<FNaiveStateMachineCommands>
 {
 public:
-	FNaiveStateMachineCommands() : TCommands<FNaiveStateMachineCommands>("StateMachine.Nodes", LOCTEXT("Nodes", "Nodes"), NAME_None, FEditorStyle::GetStyleSetName())
+	FNaiveStateMachineCommands() : TCommands<FNaiveStateMachineCommands>("StateMachine.Nodes", LOCTEXT("Nodes", "Nodes"), NAME_None, FAppStyle::Get().GetStyleSetName())
 	{
 	}
 
 	TSharedPtr<FUICommandInfo> NewState;
-	TSharedPtr<FUICommandInfo> NewSubmachine;
 	TSharedPtr<FUICommandInfo> NewTransition;
 
 	/** Initialize commands */
@@ -78,14 +73,12 @@ FNaiveStateMachineEditor::~FNaiveStateMachineEditor()
 
 void FNaiveStateMachineEditor::InitStateMachineAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<class IToolkitHost>& InitToolkitHost, UNaiveStateMachine* InStateMachine)
 {
-	UNaiveStateMachine* StateMachineAssetToEdit = InStateMachine;
-
 	if (InStateMachine)
 	{
 		StateMachine = InStateMachine;
 	}
 
-	TSharedPtr<FNaiveStateMachineEditor> ThisPtr(SharedThis(this));
+	const TSharedPtr<FNaiveStateMachineEditor> ThisPtr(SharedThis(this));
 	if (!DocumentManager.IsValid())
 	{
 		DocumentManager = MakeShareable(new FDocumentTracker);
@@ -93,11 +86,11 @@ void FNaiveStateMachineEditor::InitStateMachineAssetEditor(const EToolkitMode::T
 
 		// Register the document factories
 		{
-			TSharedRef<FDocumentTabFactory> GraphEditorFactory = MakeShareable(new FStateMachineGraphEditorSummoner(ThisPtr,
+			const TSharedRef<FDocumentTabFactory> GraphEditorFactory = MakeShareable(new FStateMachineGraphEditorSummoner(ThisPtr,
 				FStateMachineGraphEditorSummoner::FOnCreateGraphEditorWidget::CreateSP(this, &FNaiveStateMachineEditor::CreateGraphEditorWidget)
 			));
 
-			// Also store off a reference to the grapheditor factory so we can find all the tabs spawned by it later.
+			// Also store off a reference to the graph editor factory so we can find all the tabs spawned by it later.
 			GraphEditorTabFactoryPtr = GraphEditorFactory;
 			DocumentManager->RegisterDocumentFactory(GraphEditorFactory);
 		}
@@ -110,8 +103,8 @@ void FNaiveStateMachineEditor::InitStateMachineAssetEditor(const EToolkitMode::T
 	{
 		FGraphEditorCommands::Register();
 
-		const bool bCreateDefaultStandaloneMenu = true;
-		const bool bCreateDefaultToolbar = true;
+		constexpr bool bCreateDefaultStandaloneMenu = true;
+		constexpr bool bCreateDefaultToolbar = true;
 		const TSharedRef<FTabManager::FLayout> DummyLayout = FTabManager::NewLayout("NullLayout")->AddArea(FTabManager::NewPrimaryArea());
 
 		InitAssetEditor(
@@ -127,7 +120,7 @@ void FNaiveStateMachineEditor::InitStateMachineAssetEditor(const EToolkitMode::T
 		AddMenuExtender(StateMachineEditorModule.GetMenuExtensibilityManager()->GetAllExtenders(GetToolkitCommands(), GetEditingObjects()));
 
 		AddApplicationMode(StateMachineMode, MakeShareable(new FNaiveStateMachineEditorApplicationMode(SharedThis(this))));
-		SetCurrentMode(FNaiveStateMachineEditor::StateMachineMode);
+		SetCurrentMode(StateMachineMode);
 
 		BindCommands();
 		RegenerateMenusAndToolbars();
@@ -159,7 +152,7 @@ TSharedRef<class SGraphEditor> FNaiveStateMachineEditor::CreateGraphEditorWidget
 	// Make title bar
 	TSharedRef<SWidget> TitleBarWidget =
 		SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush(TEXT("Graph.TitleBackground")))
+		.BorderImage(FAppStyle::GetBrush(TEXT("Graph.TitleBackground")))
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SHorizontalBox)
@@ -169,7 +162,7 @@ TSharedRef<class SGraphEditor> FNaiveStateMachineEditor::CreateGraphEditorWidget
 		[
 			SNew(STextBlock)
 			.Text(NSLOCTEXT("NaiveStateMachineEditor", "StateMachineGraphLabel", "State Machine Graph"))
-		.TextStyle(FEditorStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
+		.TextStyle(FAppStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
 		]
 		];
 
@@ -213,19 +206,19 @@ void FNaiveStateMachineEditor::OnSelectedNodesChanged(const TSet<class UObject*>
 	}
 }
 
-void FNaiveStateMachineEditor::OnGraphNodeDoubleClicked(class UEdGraphNode* Node)
+void FNaiveStateMachineEditor::OnGraphNodeDoubleClicked(class UEdGraphNode* Node) const
 {
-	UNaiveStateMachineGraphNode* GraphNode = Cast<UNaiveStateMachineGraphNode>(Node);
+	const UNaiveStateMachineGraphNode* GraphNode = Cast<UNaiveStateMachineGraphNode>(Node);
 	UObject* JumpTarget = nullptr;
 	if (GraphNode->IsA(UNaiveStateMachineNode_SubMachine::StaticClass()))
 	{
 		GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(GraphNode->GetJumpTargetForDoubleClick());
 	}
 
-	if(UClass* TemplateClass = GraphNode->GetTemplateClass())
+	if(const UClass* TemplateClass = GraphNode->GetTemplateClass())
 	{
 		UPackage* Pkg = TemplateClass->GetOuterUPackage();
-		FString ClassName = TemplateClass->GetName().LeftChop(2);
+		const FString& ClassName = TemplateClass->GetName().LeftChop(2);
 
 		GEditor->GetEditorSubsystem<UAssetEditorSubsystem>()->OpenEditorForAsset(FindObject<UBlueprint>(Pkg, *ClassName));
 	}
@@ -235,8 +228,8 @@ void FNaiveStateMachineEditor::OnNodeTitleCommitted(const FText& NewText, ETextC
 {
 	if (NodeBeingChanged)
 	{
-		static const FText TranscationTitle = FText::FromString(FString(TEXT("Rename Node")));
-		const FScopedTransaction Transaction(TranscationTitle);
+		static const FText TransactionTitle = FText::FromString(FString(TEXT("Rename Node")));
+		const FScopedTransaction Transaction(TransactionTitle);
 		NodeBeingChanged->Modify();
 		NodeBeingChanged->OnRenameNode(NewText.ToString());
 	}
@@ -247,8 +240,7 @@ void FNaiveStateMachineEditor::OnGraphEditorFocused(const TSharedRef<SGraphEdito
 	UpdateGraphEdPtr = InGraphEditor;
 	//FocusedGraphOwner = Cast<UNaiveStateMachineNode_SubMachine>(InGraphEditor->GetCurrentGraph()->GetOuter());
 
-	FGraphPanelSelectionSet CurrentSelection;
-	CurrentSelection = InGraphEditor->GetSelectedNodes();
+	const FGraphPanelSelectionSet& CurrentSelection = InGraphEditor->GetSelectedNodes();
 	if (CurrentSelection.Num() > 0)
 	{
 		OnSelectedNodesChanged(CurrentSelection);
@@ -273,9 +265,15 @@ FText FNaiveStateMachineEditor::GetLocalizedMode(FName InMode)
 TSharedRef<SWidget> FNaiveStateMachineEditor::SpawnProperties()
 {
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	const FDetailsViewArgs DetailsViewArgs(false, false, true, FDetailsViewArgs::ObjectsUseNameArea, false);
+	FDetailsViewArgs DetailsViewArgs;
+	DetailsViewArgs.bUpdatesFromSelection = false;
+	DetailsViewArgs.bLockable = false;
+	DetailsViewArgs.bAllowSearch = true;
+	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::ObjectsUseNameArea;
+	DetailsViewArgs.bHideSelectionTip = false;
+	
 	DetailsView = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
-	DetailsView->SetObject(NULL);
+	DetailsView->SetObject(nullptr);
 	DetailsView->OnFinishedChangingProperties().AddSP(this, &FNaiveStateMachineEditor::OnFinishedChangingProperties);
 
 	return DetailsView.ToSharedRef();
@@ -298,7 +296,7 @@ FText FNaiveStateMachineEditor::GetBaseToolkitName() const
 
 FString FNaiveStateMachineEditor::GetWorldCentricTabPrefix() const
 {
-	return TEXT("SLGameplayCustomized");
+	return TEXT("NaiveGameplayCustomized");
 }
 
 FLinearColor FNaiveStateMachineEditor::GetWorldCentricTabColorScale() const
@@ -360,13 +358,13 @@ void FNaiveStateMachineEditor::ExtendToolbar(TSharedPtr<FExtender> Extender)
 			{
 				ToolbarBuilder.AddToolBarButton(FNaiveStateMachineCommands::Get().NewState, 
 					NAME_None, TAttribute<FText>(), TAttribute<FText>(), 
-					FSlateIcon(FEditorStyle::GetStyleSetName(), "BTEditor.Graph.NewTask","BTEditor.Graph.NewTask.Small"));
+					FSlateIcon(FAppStyle::Get().GetStyleSetName(), "BTEditor.Graph.NewTask","BTEditor.Graph.NewTask.Small"));
 // 				ToolbarBuilder.AddToolBarButton(FNaiveStateMachineCommands::Get().NewSubmachine,
 // 					NAME_None, TAttribute<FText>(), TAttribute<FText>(),
 // 					FSlateIcon(FEditorStyle::GetStyleSetName(), "BTEditor.Graph.NewDecorator", "BTEditor.Graph.NewDecorator.Small"));
 				ToolbarBuilder.AddToolBarButton(FNaiveStateMachineCommands::Get().NewTransition,
 					NAME_None, TAttribute<FText>(), TAttribute<FText>(),
-					FSlateIcon(FEditorStyle::GetStyleSetName(), "BTEditor.Graph.NewService", "BTEditor.Graph.NewService.Small"));
+					FSlateIcon(FAppStyle::Get().GetStyleSetName(), "BTEditor.Graph.NewService", "BTEditor.Graph.NewService.Small"));
 			}
 			ToolbarBuilder.EndSection();
 		}
@@ -487,10 +485,10 @@ void FNaiveStateMachineEditor::HandleNewNodeClassPicked(UClass* InClass) const
 
 		FString Name;
 		FString PackageName;
-		FAssetToolsModule& AssetToolsModule = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools");
+		const FAssetToolsModule& AssetToolsModule = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools");
 		AssetToolsModule.Get().CreateUniqueAssetName(PathName, TEXT("_New"), PackageName, Name);
-
-		UPackage* Package = CreatePackage(NULL, *PackageName);
+		
+		UPackage* Package = CreatePackage(*PackageName);
 		if (ensure(Package))
 		{
 			// Create and init a new Blueprint

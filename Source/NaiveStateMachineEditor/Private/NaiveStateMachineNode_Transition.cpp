@@ -231,7 +231,7 @@ void SNaiveStateMachineNode_Transition::UpdateGraphNode()
 			+ SOverlay::Slot()
 		[
 			SNew(SImage)
-			.Image(FEditorStyle::GetBrush("Graph.TransitionNode.ColorSpill"))
+			.Image(FAppStyle::GetBrush("Graph.TransitionNode.ColorSpill"))
 		.ColorAndOpacity(this, &SNaiveStateMachineNode_Transition::GetTransitionColor)
 		]
 	+ SOverlay::Slot()
@@ -362,7 +362,7 @@ FSlateColor SNaiveStateMachineNode_Transition::GetTransitionColor() const
 
 const FSlateBrush* SNaiveStateMachineNode_Transition::GetTransitionIconImage() const
 {
-	return FEditorStyle::GetBrush("Graph.TransitionNode.Icon");
+	return FAppStyle::GetBrush("Graph.TransitionNode.Icon");
 }
 
 TSharedRef<SWidget> SNaiveStateMachineNode_Transition::GenerateRichTooltip()
@@ -381,7 +381,7 @@ TSharedRef<SWidget> SNaiveStateMachineNode_Transition::GenerateRichTooltip()
 		.Padding(2.0f)
 		[
 			SNew(STextBlock)
-			.TextStyle(FEditorStyle::Get(), TEXT("NormalText.Important"))
+			.TextStyle(FAppStyle::Get(), TEXT("NormalText.Important"))
 			.Text(TooltipDesc)
 		];
 

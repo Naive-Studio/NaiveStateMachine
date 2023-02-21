@@ -36,7 +36,7 @@ public:
 	bool IsPropertyEditable() const;
 	void OnPackageSaved(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext PostSaveContext);
 	void OnFinishedChangingProperties(const FPropertyChangedEvent& PropertyChangedEvent);
-	void OnGraphNodeDoubleClicked(class UEdGraphNode* Node);
+	void OnGraphNodeDoubleClicked(class UEdGraphNode* Node) const;
 	void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 	void OnGraphEditorFocused(const TSharedRef<SGraphEditor>& InGraphEditor);
 

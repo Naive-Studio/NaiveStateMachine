@@ -125,7 +125,7 @@ TSharedRef<SWidget> FStateMachineGraphEditorSummoner::CreateTabBodyForObject(con
 
 const FSlateBrush* FStateMachineGraphEditorSummoner::GetTabIconForObject(const FWorkflowTabSpawnInfo& Info, UEdGraph* DocumentID) const
 {
-	return FEditorStyle::GetBrush("NoBrush");
+	return FAppStyle::GetBrush("NoBrush");
 }
 
 void FStateMachineGraphEditorSummoner::SaveState(TSharedPtr<SDockTab> Tab, TSharedPtr<FTabPayload> Payload) const
@@ -149,7 +149,7 @@ void FStateMachineGraphEditorSummoner::SaveState(TSharedPtr<SDockTab> Tab, TShar
 	 ,StateMachineEditorPtr(InEditorPtr)
  {
 	 TabLabel = LOCTEXT("StateMachineDetailsLebal", "Details");
-	 TabIcon = FSlateIcon(FEditorStyle::GetStyleSetName(), "Kismet.Tabs.Components");
+	 TabIcon = FSlateIcon(FAppStyle::Get().GetStyleSetName(), "Kismet.Tabs.Components");
 	
 	 bIsSingleton = true;
 

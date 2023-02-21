@@ -15,8 +15,8 @@ void SNaiveStateMachineGraphPin::Construct(const FArguments & InArgs, UEdGraphPi
 	const UEdGraphSchema* Schema = GraphPinObj->GetSchema();
 	check(Schema);
 
-	CachedImg_Pin_Background = FEditorStyle::GetBrush(TEXT("Graph.StateNode.Pin.Background"));
-	CachedImg_Pin_BackgroundHovered = FEditorStyle::GetBrush(TEXT("Graph.StateNode.Pin.BackgroundHovered"));
+	CachedImg_Pin_Background = FAppStyle::GetBrush(TEXT("Graph.StateNode.Pin.Background"));
+	CachedImg_Pin_BackgroundHovered = FAppStyle::GetBrush(TEXT("Graph.StateNode.Pin.BackgroundHovered"));
 
 	// Set up a hover for pins that is tinted the color of the pin.
 	SBorder::Construct(SBorder::FArguments()

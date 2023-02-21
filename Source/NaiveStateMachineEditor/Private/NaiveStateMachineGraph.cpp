@@ -24,8 +24,6 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 	TArray<FNaiveTransition>& SubEntryTransitions = StateMachine->GetEntryTransitionsMutable();
 	StateMachineContext.Reset();
 	SubEntryTransitions.Reset();
-
-	UNaiveStateMachineNode_Entry* EntryNode = NULL;
 	
 	for (UEdGraphNode* Node : Nodes)
 	{
@@ -40,9 +38,8 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 				{
 					const FName& DefaultStateName = FName(*DefaultStateNode->GetNodeName());
 					StateMachine->SetDefaultState(DefaultStateName);
-
-					FNaiveState* StateContext = StateMachineContext.Find(DefaultStateName);
-					if (nullptr == StateContext)
+					
+					if (nullptr == StateMachineContext.Find(DefaultStateName))
 					{
 						FNaiveState NewContext;
 						NewContext.StateTemplate = DefaultStateNode->GetTemplateClass();

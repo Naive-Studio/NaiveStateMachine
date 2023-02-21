@@ -98,7 +98,7 @@ void SNaiveStateMachineNode_SubMachine::UpdateGraphNode()
 		.VAlign(VAlign_Center)
 		[
 			SNew(SBorder)
-			.BorderImage(FEditorStyle::GetBrush("Graph.StateNode.Body"))
+			.BorderImage(FAppStyle::GetBrush("Graph.StateNode.Body"))
 		.Padding(0)
 		.BorderBackgroundColor(this, &SNaiveStateMachineNode_SubMachine::GetBorderBackgroundColor)
 		[
@@ -119,7 +119,7 @@ void SNaiveStateMachineNode_SubMachine::UpdateGraphNode()
 		.Padding(10.0f)
 		[
 			SNew(SBorder)
-			.BorderImage(FEditorStyle::GetBrush("Graph.StateNode.ColorSpill"))
+			.BorderImage(FAppStyle::GetBrush("Graph.StateNode.ColorSpill"))
 		.BorderBackgroundColor(TitleShadowColor)
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Center)
@@ -149,7 +149,7 @@ void SNaiveStateMachineNode_SubMachine::UpdateGraphNode()
 		.AutoHeight()
 		[
 			SAssignNew(InlineEditableText, SInlineEditableTextBlock)
-			.Style(FEditorStyle::Get(), "Graph.StateNode.NodeTitleInlineEditableText")
+			.Style(FAppStyle::Get(), "Graph.StateNode.NodeTitleInlineEditableText")
 		.Text(NodeTitle.Get(), &SNodeTitle::GetHeadTitle)
 		.OnVerifyTextChanged(this, &SNaiveStateMachineNode_SubMachine::OnVerifyNameTextChanged)
 		.OnTextCommitted(this, &SNaiveStateMachineNode_SubMachine::OnNameTextCommited)
@@ -212,7 +212,7 @@ TSharedPtr<SToolTip> SNaiveStateMachineNode_SubMachine::GetComplexTooltip()
 		.AutoHeight()
 		[
 			SNew(STextBlock)
-			.TextStyle(FEditorStyle::Get(), "NormalText.Important")
+			.TextStyle(FAppStyle::Get(), "NormalText.Important")
 		.Text(Result)
 		]
 		];
@@ -236,7 +236,7 @@ FText SNaiveStateMachineNode_SubMachine::GetPreviewCornerText() const
 
 const FSlateBrush* SNaiveStateMachineNode_SubMachine::GetNameIcon() const
 {
-	return FEditorStyle::GetBrush(TEXT("Graph.StateNode.Icon"));
+	return FAppStyle::GetBrush(TEXT("Graph.StateNode.Icon"));
 }
 
 
