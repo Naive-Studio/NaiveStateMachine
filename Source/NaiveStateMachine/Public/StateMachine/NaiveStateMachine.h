@@ -25,14 +25,14 @@ public:
 	UNaiveStateMachine();
 	virtual  void PostInitProperties() override;
 
-	TMap<FName, FNaiveState>& GetStateContextsMutable() { return RegisteredStateMachineContext; }
-	const TMap<FName, FNaiveState>& GetStateContexts() const { return RegisteredStateMachineContext; }
+	TMap<FName, FNaiveStateConfig>& GetStateContextsMutable() { return RegisteredStateMachineContext; }
+	const TMap<FName, FNaiveStateConfig>& GetStateContexts() const { return RegisteredStateMachineContext; }
 
 	void SetDefaultState(const FName& InState);
 	const FName& GetDefaultState() const;
 
-	TArray<FNaiveTransition>& GetEntryTransitionsMutable() { return SubEntryTransitions; }
-	const TArray<FNaiveTransition>& GetEntryTransitions() const { return SubEntryTransitions; }
+	TArray<FNaiveTransitionConfig>& GetEntryTransitionsMutable() { return SubEntryTransitions; }
+	const TArray<FNaiveTransitionConfig>& GetEntryTransitions() const { return SubEntryTransitions; }
 public:
 #if WITH_EDITORONLY_DATA
 	/** Graph for state machine */
@@ -48,10 +48,10 @@ public:
 
 protected:
 	UPROPERTY()
-	TMap<FName, FNaiveState> RegisteredStateMachineContext;
+	TMap<FName, FNaiveStateConfig> RegisteredStateMachineContext;
 
 	UPROPERTY()
-	TArray<FNaiveTransition> SubEntryTransitions;
+	TArray<FNaiveTransitionConfig> SubEntryTransitions;
 
 	UPROPERTY()
 	FName DefaultState = NAIVE_INVALID_STATE;

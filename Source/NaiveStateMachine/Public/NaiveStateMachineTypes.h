@@ -32,12 +32,12 @@ public:
 
 	}
 
-	bool IsValid() const
+	FORCEINLINE bool IsValid() const
 	{
 		return Handle != INDEX_NONE;
 	}
 
-	void Invalidate()
+	FORCEINLINE void Invalidate()
 	{
 		Handle = INDEX_NONE;
 	}
@@ -54,12 +54,12 @@ public:
 		return Handle != Other.Handle;
 	}
 
-	FString ToString() const
+	FORCEINLINE FString ToString() const
 	{
 		return FString::Printf(TEXT("%d"), Handle);
 	}
 
-	int32 ToInt() const
+	FORCEINLINE int32 ToInt() const
 	{
 		return Handle;
 	}
@@ -100,15 +100,16 @@ public:
 	UPROPERTY(EditAnywhere)
 	UWorld* World = nullptr;
 
-	FNaiveStateChangeSignature Delegate;
-	FNaiveStateMachineStopSignature OnStoppedDelegate;
+	FNaiveStateChangeSignature OnStateChanged;
+	
+	FNaiveStateMachineStopSignature OnStopped;
 };
 
 #define NAIVE_INVALID_STATE NAME_None
 
 
 USTRUCT()
-struct FNaiveTransition
+struct FNaiveTransitionConfig
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -128,7 +129,7 @@ public:
 
 
 USTRUCT()
-struct FNaiveState
+struct FNaiveStateConfig
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -137,7 +138,7 @@ public:
 	TSubclassOf<UNaiveStateNode> StateTemplate = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	TArray<FNaiveTransition> Transitions;
+	TArray<FNaiveTransitionConfig> Transitions;
 
 	UPROPERTY(EditAnywhere)
 	class UNaiveStateMachine* SubStateMachineAsset = nullptr;
@@ -145,25 +146,28 @@ public:
 
 
 USTRUCT()
-struct FNaiveInstance
+struct FNaiveNodeInstanceContext
 {
 	GENERATED_USTRUCT_BODY()
-public:
 
 	bool bInstanced = false;
-
-	int32 InstanceMemoryOffset = -1;
-
-	uint16 GetInstanceMemoryOffset() const { return InstanceMemoryOffset;}
+	
+	int32 MemoryOffset = -1;
+	
+	FORCEINLINE uint8* GetInstanceMemory(uint8* StateMachineMemory) const
+	{
+		return bInstanced ? nullptr :
+		(StateMachineMemory != nullptr ? (StateMachineMemory + MemoryOffset) : nullptr);
+	}
 };
 
 
 USTRUCT()
-struct FNaiveTransitionInstance : public FNaiveInstance
+struct FNaiveTransitionContext : public FNaiveNodeInstanceContext
 {
 	GENERATED_USTRUCT_BODY()
-public:
-	FName NextSate = NAIVE_INVALID_STATE;
+
+	FName NextState = NAIVE_INVALID_STATE;
 	
 	TArray<FName> ObservingEvents; 
 
@@ -173,18 +177,16 @@ public:
 
 
 USTRUCT()
-struct FNaiveStateInstance : public FNaiveInstance
+struct FNaiveStateContext : public FNaiveNodeInstanceContext
 {
 	GENERATED_USTRUCT_BODY()
-public:
-	UPROPERTY()
+	
 	FName StateName = NAME_None;
 	
 	UPROPERTY(Transient)
 	UNaiveStateNode* StateNodeInstance = nullptr;
 	
-	UPROPERTY()
-	TArray<FNaiveTransitionInstance> ActiveTransitions;
+	TArray<FNaiveTransitionContext> ActiveTransitions;
 	
 	UPROPERTY(Transient)
 	class UNaiveStateMachine* OwnerStateMachine = nullptr;
@@ -192,7 +194,7 @@ public:
 
 
 USTRUCT(BlueprintType)
-struct FNaiveStateMachineInstance
+struct FNaiveStateMachineContext
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -206,7 +208,7 @@ struct FNaiveStateMachineInstance
 	FName UniqueName = NAME_None;
 
 	UPROPERTY()
-	TArray<FNaiveStateInstance> ActiveStateLayerStack;
+	TArray<FNaiveStateContext> ActiveStateContextStack;
 
 	// State Machine Stack From Bottom to Top, the name will be : Layer1.Layer2.Layer2.....
 	FName ActiveStateName = NAME_None;
@@ -217,8 +219,8 @@ struct FNaiveStateMachineInstance
 	UPROPERTY()
 	class UObject* Owner = nullptr;
 
-	FNaiveStateChangeSignature OnStateChangedDelegate;
-	FNaiveStateMachineStopSignature OnStoppedDelegate;
+	FNaiveStateChangeSignature StateChangeSignature;
+	FNaiveStateMachineStopSignature StoppedSignature;
 
 	TArray<uint8> InstanceMemory;
 

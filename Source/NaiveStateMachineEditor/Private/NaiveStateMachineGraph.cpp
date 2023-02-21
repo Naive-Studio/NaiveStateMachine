@@ -20,8 +20,8 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 	UNaiveStateMachine* StateMachine = Cast<UNaiveStateMachine>(GetOuter());
 	check(StateMachine);
 
-	TMap<FName, FNaiveState>& StateMachineContext = StateMachine->GetStateContextsMutable();
-	TArray<FNaiveTransition>& SubEntryTransitions = StateMachine->GetEntryTransitionsMutable();
+	TMap<FName, FNaiveStateConfig>& StateMachineContext = StateMachine->GetStateContextsMutable();
+	TArray<FNaiveTransitionConfig>& SubEntryTransitions = StateMachine->GetEntryTransitionsMutable();
 	StateMachineContext.Reset();
 	SubEntryTransitions.Reset();
 	
@@ -41,7 +41,7 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 					
 					if (nullptr == StateMachineContext.Find(DefaultStateName))
 					{
-						FNaiveState NewContext;
+						FNaiveStateConfig NewContext;
 						NewContext.StateTemplate = DefaultStateNode->GetTemplateClass();
 						NewContext.SubStateMachineAsset = nullptr;
 						StateMachineContext.Add(DefaultStateName, NewContext);
@@ -67,7 +67,7 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 			{
 				const FName& NextStateName = FName(*NextStateNode->GetNodeName());
 
-				FNaiveTransition NewTransitionContext;
+				FNaiveTransitionConfig NewTransitionContext;
 				NewTransitionContext.NextSate = NextStateName;
 				NewTransitionContext.TransitionTemplate = Transition->GetTemplateClass();
 				NewTransitionContext.bEventDriven = Transition->bEventDriven;
@@ -81,8 +81,8 @@ void UNaiveStateMachineGraph::UpdateAsset(int32 UpdateFlags /*= 0*/)
 				{
 					const FName& PrevStateName = FName(*PrevStateNode->GetNodeName());
 					
-					FNaiveState& PrevContext = StateMachineContext.FindOrAdd(PrevStateName);
-					FNaiveState& NextContext = StateMachineContext.FindOrAdd(NextStateName);
+					FNaiveStateConfig& PrevContext = StateMachineContext.FindOrAdd(PrevStateName);
+					FNaiveStateConfig& NextContext = StateMachineContext.FindOrAdd(NextStateName);
 
 					PrevContext.StateTemplate = PrevStateNode->GetTemplateClass();
 					PrevContext.Transitions.Add(NewTransitionContext);

@@ -33,6 +33,11 @@ UObject* UNaiveStateMachineEditorFactory::FactoryCreateNew(UClass* InClass, UObj
 	return StateMachineAsset;
 }
 
+FString UNaiveStateMachineEditorFactory::GetDefaultNewAssetName() const
+{
+	return FString(TEXT("SM_New")) + GetSupportedClass()->GetName();;
+}
+
 TSharedPtr<class SGraphNode> FStateMachineGraphPanelNodeFactory::CreateNode(UEdGraphNode* Node) const
 {
 	if (UNaiveStateMachineNode_Entry* EntryNode = Cast<UNaiveStateMachineNode_Entry>(Node))

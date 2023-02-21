@@ -29,9 +29,9 @@ FNaiveStateMachineHandle UNaiveStateMachineManager::StartStateMachine(const FNai
 {
 	if (InRequest.Template)
 	{
-		FNaiveStateMachineInstance NewContext;
+		FNaiveStateMachineContext NewContext;
 		LoadStateMachine(NewContext, InRequest);
-		SwitchState(NewContext, NewContext.StateMachineAsset, NewContext.StateMachineAsset->GetDefaultState());
+		GoToState(NewContext, NewContext.StateMachineAsset, NewContext.StateMachineAsset->GetDefaultState());
 		
 		RunningStateMachines.Add(NewContext.InstanceHandle, MoveTemp(NewContext));
 		
@@ -41,7 +41,7 @@ FNaiveStateMachineHandle UNaiveStateMachineManager::StartStateMachine(const FNai
 	return FNaiveStateMachineHandle::HANDLE_NONE;
 }
 
-void UNaiveStateMachineManager::LoadStateMachine(FNaiveStateMachineInstance& InOutContext, const FNaiveRunStateMachineRequest& InRequest)
+void UNaiveStateMachineManager::LoadStateMachine(FNaiveStateMachineContext& InOutContext, const FNaiveRunStateMachineRequest& InRequest)
 {
 	UNaiveStateMachine* Template = InRequest.Template;
 
@@ -51,47 +51,47 @@ void UNaiveStateMachineManager::LoadStateMachine(FNaiveStateMachineInstance& InO
 	InOutContext.FastWorld = InRequest.World;
 	InOutContext.UniqueName = InstanceTemplateName;
 	InOutContext.StateMachineAsset = Template;
-	InOutContext.OnStateChangedDelegate = InRequest.Delegate;
-	InOutContext.OnStoppedDelegate = InRequest.OnStoppedDelegate;
+	InOutContext.StateChangeSignature = InRequest.OnStateChanged;
+	InOutContext.StoppedSignature = InRequest.OnStopped;
 }
 
 void UNaiveStateMachineManager::StopStateMachine(const FNaiveStateMachineHandle& InHandle)
 {
-	if (FNaiveStateMachineInstance* LocalContext = RunningStateMachines.Find(InHandle))
+	if (FNaiveStateMachineContext* LocalContext = RunningStateMachines.Find(InHandle))
 	{
-		LocalContext->OnStoppedDelegate.ExecuteIfBound(LocalContext->Owner, InHandle);
+		LocalContext->StoppedSignature.ExecuteIfBound(LocalContext->Owner, InHandle);
 		RunningStateMachines.Remove(InHandle);
 	}
 }
 
 FName UNaiveStateMachineManager::GetActiveStateName(const FNaiveStateMachineHandle& InHandle)
 {
-	const FNaiveStateMachineInstance* LocalContext = RunningStateMachines.Find(InHandle);
+	const FNaiveStateMachineContext* LocalContext = RunningStateMachines.Find(InHandle);
 	return LocalContext ? LocalContext->ActiveStateName : NAME_None;
 }
 
 void UNaiveStateMachineManager::Tick(float DeltaTime)
 {
-	for (TMap<FNaiveStateMachineHandle, FNaiveStateMachineInstance>::TIterator ContextItr = RunningStateMachines.CreateIterator(); ContextItr; ++ContextItr)
+	for (TMap<FNaiveStateMachineHandle, FNaiveStateMachineContext>::TIterator ContextItr = RunningStateMachines.CreateIterator(); ContextItr; ++ContextItr)
 	{
-		FNaiveStateMachineInstance& StateMachineInstance = ContextItr->Value;
-		uint8* InstanceMemoryData = StateMachineInstance.InstanceMemory.GetData();
+		FNaiveStateMachineContext& StateMachineContext = ContextItr->Value;
+		uint8* StateMachineMemory = StateMachineContext.InstanceMemory.GetData();
 		
 		bool bMeetCondition = false;
-		for (auto& StateInstance : StateMachineInstance.ActiveStateLayerStack)
+		for (auto& StateContext : StateMachineContext.ActiveStateContextStack)
 		{
-			if (IsValid(StateInstance.StateNodeInstance))
+			if (IsValid(StateContext.StateNodeInstance))
 			{
-				uint8* NodeMemory = StateInstance.bInstanced?nullptr:(InstanceMemoryData!=nullptr?InstanceMemoryData+StateInstance.GetInstanceMemoryOffset():nullptr);
-				StateInstance.StateNodeInstance->OnUpdate(StateMachineInstance.Owner, NodeMemory, DeltaTime);
+				uint8* NodeMemory = StateContext.GetInstanceMemory(StateMachineMemory);
+				StateContext.StateNodeInstance->OnUpdate(StateMachineContext.Owner, NodeMemory, DeltaTime);
 			}
 			
- 			for (const FNaiveTransitionInstance& TransitionInstance : StateInstance.ActiveTransitions)
+ 			for (const FNaiveTransitionContext& TransitionInstance : StateContext.ActiveTransitions)
  			{
  				UNaiveTransitionNode* TransitionObject = TransitionInstance.TransitionObject;
  				if (TransitionInstance.ObservingEvents.Num() > 0 && PendingForwardEvents.Num() > 0)
  				{
-					if (const FNaiveEventQueue* EventQueue = PendingForwardEvents.Find(StateMachineInstance.InstanceHandle))
+					if (const FNaiveEventQueue* EventQueue = PendingForwardEvents.Find(StateMachineContext.InstanceHandle))
 					{
 						const TArray<FName>& Events = *EventQueue;
 						for (auto& Event : Events)
@@ -105,11 +105,11 @@ void UNaiveStateMachineManager::Tick(float DeltaTime)
 					}
  				}
 
- 				uint8* NodeMemory = TransitionInstance.bInstanced?nullptr:(InstanceMemoryData!=nullptr?InstanceMemoryData+TransitionInstance.GetInstanceMemoryOffset():nullptr);
+ 				uint8* NodeMemory = TransitionInstance.GetInstanceMemory(StateMachineMemory);
  				if(bMeetCondition ||
- 					(TransitionObject && TransitionObject->CheckCondition(StateMachineInstance.Owner, NodeMemory, DeltaTime)))
+ 					(TransitionObject && TransitionObject->CheckCondition(StateMachineContext.Owner, NodeMemory, DeltaTime)))
  				{
- 					SwitchState(StateMachineInstance, StateInstance.OwnerStateMachine, TransitionInstance.NextSate);
+ 					GoToState(StateMachineContext, StateContext.OwnerStateMachine, TransitionInstance.NextState);
  					break;
  				}
  			}
@@ -131,31 +131,31 @@ TStatId UNaiveStateMachineManager::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UNaiveStateMachineManager, STATGROUP_Tickables);
 }
 
-void UNaiveStateMachineManager::SwitchState(FNaiveStateMachineInstance& StateMachineContext, UNaiveStateMachine* InStateMachine, const FName& NewState)
+void UNaiveStateMachineManager::GoToState(FNaiveStateMachineContext& StateMachineContext, UNaiveStateMachine* InStateMachine, const FName& NewState)
 {
 	const FName OldStateName = StateMachineContext.ActiveStateName;
-	uint8* InstanceMemoryData = StateMachineContext.InstanceMemory.GetData();
+	uint8* StateMachineMemory = StateMachineContext.InstanceMemory.GetData();
 	
 	UNaiveStateMachine* StateMachineAsset = InStateMachine;
 	
-	if (StateMachineContext.ActiveStateLayerStack.Num())
+	if (StateMachineContext.ActiveStateContextStack.Num())
 	{
 		//Clear active state stack
-		while (StateMachineContext.ActiveStateLayerStack.Num() > 0 &&
-			StateMachineContext.ActiveStateLayerStack.Top().OwnerStateMachine != InStateMachine)
+		while (StateMachineContext.ActiveStateContextStack.Num() > 0 &&
+			StateMachineContext.ActiveStateContextStack.Top().OwnerStateMachine != InStateMachine)
 		{
-			const FNaiveStateInstance& StateContext = StateMachineContext.ActiveStateLayerStack.Pop();
+			const FNaiveStateContext& StateContext = StateMachineContext.ActiveStateContextStack.Pop();
 			if (StateContext.StateNodeInstance)
 			{
-				uint8* NodeMemory = StateContext.bInstanced?nullptr:(InstanceMemoryData!=nullptr?InstanceMemoryData+StateContext.GetInstanceMemoryOffset():nullptr);
+				uint8* NodeMemory = StateContext.GetInstanceMemory(StateMachineMemory);
 				StateContext.StateNodeInstance->OnExit(StateMachineContext.Owner, NodeMemory);
 			}
 		}
 
-		const FNaiveStateInstance& Context = StateMachineContext.ActiveStateLayerStack.Pop();
+		const FNaiveStateContext& Context = StateMachineContext.ActiveStateContextStack.Pop();
 		if (Context.StateNodeInstance)
 		{
-			uint8* NodeMemory = Context.bInstanced?nullptr:(InstanceMemoryData!=nullptr?InstanceMemoryData+Context.GetInstanceMemoryOffset():nullptr);
+			uint8* NodeMemory = Context.GetInstanceMemory(StateMachineMemory);
 			Context.StateNodeInstance->OnExit(StateMachineContext.Owner, NodeMemory);
 		}
 		
@@ -166,33 +166,33 @@ void UNaiveStateMachineManager::SwitchState(FNaiveStateMachineInstance& StateMac
 	{
 		int32 MemorySize = 0;
 		TArray<UNaiveStateNode*> NewStateNodeLists;
-		InnerEnterState(StateMachineContext, StateMachineAsset, NewState,MemorySize);
+		InnerGoToState(StateMachineContext, StateMachineAsset, NewState,MemorySize);
 		StateMachineContext.InstanceMemory.SetNumZeroed(MemorySize);
 
-		for(FNaiveStateInstance& NewStateInstance : StateMachineContext.ActiveStateLayerStack)
+		for(FNaiveStateContext& NewStateInstance : StateMachineContext.ActiveStateContextStack)
 		{
 			if(NewStateInstance.StateNodeInstance)
 			{
-				uint8* NodeMemory = NewStateInstance.bInstanced ? nullptr :
-				           (StateMachineContext.InstanceMemory.GetData()!=nullptr ?
-				           	StateMachineContext.InstanceMemory.GetData()+NewStateInstance.GetInstanceMemoryOffset() :
-				           	nullptr);
-				
+				uint8* NodeMemory = NewStateInstance.GetInstanceMemory(StateMachineContext.InstanceMemory.GetData());
 				NewStateInstance.StateNodeInstance->OnEnter(StateMachineContext.Owner,NodeMemory);
 			}
 		}
 
-		StateMachineContext.ActiveStateName = MakeLayeredStateName(StateMachineContext.ActiveStateLayerStack);
-		StateMachineContext.OnStateChangedDelegate.ExecuteIfBound(OldStateName, StateMachineContext.ActiveStateName);
+		StateMachineContext.ActiveStateName = BuildStateName(StateMachineContext.ActiveStateContextStack);
+		
+		if(StateMachineContext.StateChangeSignature.IsBound())
+		{
+			StateMachineContext.StateChangeSignature.Execute(OldStateName, StateMachineContext.ActiveStateName);
+		}
 	}
 }
 
-void UNaiveStateMachineManager::InnerEnterState(FNaiveStateMachineInstance& StatMachineContext,
+void UNaiveStateMachineManager::InnerGoToState(FNaiveStateMachineContext& StatMachineContext,
 												UNaiveStateMachine* InStateMachine,
 												FName NewState,int32& InMemorySize)
 {
-	const TMap<FName, FNaiveState>& LocalStateContextMap = InStateMachine->GetStateContexts();
-	const FNaiveState& StateTemplate = LocalStateContextMap.FindChecked(NewState);
+	const TMap<FName, FNaiveStateConfig>& LocalStateContextMap = InStateMachine->GetStateContexts();
+	const FNaiveStateConfig& StateTemplate = LocalStateContextMap.FindChecked(NewState);
 	
 	auto CreateStateObject = [this, &StatMachineContext](UClass* InClass, bool& bInstanced, int32& MemoryOffset, int32& MemorySize, bool bForceInstance = false)
 	{
@@ -220,27 +220,27 @@ void UNaiveStateMachineManager::InnerEnterState(FNaiveStateMachineInstance& Stat
 		return NewStateBaseObject;
 	};
 	
-	FNaiveStateInstance StateInstance;
+	FNaiveStateContext StateInstance;
 	StateInstance.StateName = NewState;
 	StateInstance.OwnerStateMachine = InStateMachine;
-	for (const FNaiveTransition& Transition : StateTemplate.Transitions)
+	for (const FNaiveTransitionConfig& Transition : StateTemplate.Transitions)
 	{
-		FNaiveTransitionInstance TransitionInstance;
-		TransitionInstance.NextSate = Transition.NextSate;
+		FNaiveTransitionContext TransitionInstance;
+		TransitionInstance.NextState = Transition.NextSate;
 		if(Transition.bEventDriven)
 		{
 			TransitionInstance.ObservingEvents = Transition.ObservingEvents;
 		}
-		TransitionInstance.TransitionObject = Cast<UNaiveTransitionNode>(CreateStateObject(Transition.TransitionTemplate,TransitionInstance.bInstanced,TransitionInstance.InstanceMemoryOffset,InMemorySize));
+		TransitionInstance.TransitionObject = Cast<UNaiveTransitionNode>(CreateStateObject(Transition.TransitionTemplate,TransitionInstance.bInstanced,TransitionInstance.MemoryOffset,InMemorySize));
 		StateInstance.ActiveTransitions.Add(MoveTemp(TransitionInstance));
 	}
 
 	if (StateTemplate.StateTemplate)
 	{
-		StateInstance.StateNodeInstance = Cast<UNaiveStateNode>(CreateStateObject(StateTemplate.StateTemplate,StateInstance.bInstanced,StateInstance.InstanceMemoryOffset,InMemorySize));
+		StateInstance.StateNodeInstance = Cast<UNaiveStateNode>(CreateStateObject(StateTemplate.StateTemplate,StateInstance.bInstanced,StateInstance.MemoryOffset,InMemorySize));
 		check(StateInstance.StateNodeInstance);
 	}
-	StatMachineContext.ActiveStateLayerStack.Push(MoveTemp(StateInstance));
+	StatMachineContext.ActiveStateContextStack.Push(MoveTemp(StateInstance));
 
 	if (StateTemplate.SubStateMachineAsset)
 	{
@@ -250,7 +250,7 @@ void UNaiveStateMachineManager::InnerEnterState(FNaiveStateMachineInstance& Stat
 		int32 TempMemorySize;
 
 		//Check the sub-entry transition immediately
-		for (const FNaiveTransition& Context : StateTemplate.SubStateMachineAsset->GetEntryTransitions())
+		for (const FNaiveTransitionConfig& Context : StateTemplate.SubStateMachineAsset->GetEntryTransitions())
 		{
 			UNaiveTransitionNode* NewTransitionObj = Cast<UNaiveTransitionNode>(CreateStateObject(Context.TransitionTemplate,bInstanced,TempMemoryOffset,TempMemorySize,true));
 			if (NewTransitionObj && NewTransitionObj->CheckCondition(StatMachineContext.Owner,nullptr,0.0f))
@@ -263,12 +263,12 @@ void UNaiveStateMachineManager::InnerEnterState(FNaiveStateMachineInstance& Stat
 		const bool bInvalidDefaultState = DefaultSubState.IsNone();
 		if (!bInvalidDefaultState)
 		{
-			InnerEnterState(StatMachineContext, StateTemplate.SubStateMachineAsset, DefaultSubState, InMemorySize);
+			InnerGoToState(StatMachineContext, StateTemplate.SubStateMachineAsset, DefaultSubState, InMemorySize);
 		}
 	}
 }
 
-FName UNaiveStateMachineManager::MakeLayeredStateName(const TArray<FNaiveStateInstance>& StateStack)
+FName UNaiveStateMachineManager::BuildStateName(const TArray<FNaiveStateContext>& StateStack)
 {
 	if (StateStack.Num()>0)
 	{
@@ -287,8 +287,8 @@ FName UNaiveStateMachineManager::MakeLayeredStateName(const TArray<FNaiveStateIn
 
 UNaiveStateNode* UNaiveStateMachineManager::GetActiveState(const FNaiveStateMachineHandle& InHandle)
 {
-	FNaiveStateMachineInstance* LocalContext = RunningStateMachines.Find(InHandle);
-	return LocalContext ? LocalContext->ActiveStateLayerStack.Top().StateNodeInstance : nullptr;
+	FNaiveStateMachineContext* LocalContext = RunningStateMachines.Find(InHandle);
+	return LocalContext ? LocalContext->ActiveStateContextStack.Top().StateNodeInstance : nullptr;
 }
 
 void UNaiveStateMachineManager::SendEventToTransition(const FNaiveStateMachineHandle& InHandle, const FName& InEventName)

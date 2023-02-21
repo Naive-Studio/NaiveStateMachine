@@ -46,7 +46,7 @@ void UNaiveStateMachineComponent::RunStateMachine(UNaiveStateMachine* InStateMac
 	Request.Owner = GetOuter();
 	Request.World = GetWorld();
 	Request.Template = InStateMachine;
-	Request.Delegate.BindUObject(this, &UNaiveStateMachineComponent::OnStateChanged);
+	Request.OnStateChanged.BindUObject(this, &UNaiveStateMachineComponent::OnStateChanged);
 
 	StateMachineHandle = UNaiveStateMachineFunctionLibrary::RunStateMachine(this, Request);
 }

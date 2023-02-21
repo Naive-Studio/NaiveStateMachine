@@ -43,23 +43,23 @@ public:
 	virtual TStatId GetStatId() const override;
 	// FTickableGameObject end
 
-	void SwitchState(FNaiveStateMachineInstance& StateMachineContext, UNaiveStateMachine* InStateMachine , const FName& NewState);
+	void GoToState(FNaiveStateMachineContext& StateMachineContext, UNaiveStateMachine* InStateMachine , const FName& NewState);
 	UNaiveStateNode* GetActiveState(const FNaiveStateMachineHandle& InHandle);
 
 	void SendEventToTransition(const FNaiveStateMachineHandle& InHandle, const FName& InEventName);
 
 protected:
-	void LoadStateMachine(FNaiveStateMachineInstance& InstanceContext, const FNaiveRunStateMachineRequest& InRequest);
+	void LoadStateMachine(FNaiveStateMachineContext& InstanceContext, const FNaiveRunStateMachineRequest& InRequest);
 
-	void InnerEnterState(FNaiveStateMachineInstance& StatMachineContext,
+	void InnerGoToState(FNaiveStateMachineContext& StatMachineContext,
 						UNaiveStateMachine* InStateMachine,
 						FName NewState, int32& InMemorySize);
 
-	static FName MakeLayeredStateName(const TArray<FNaiveStateInstance>& StateStack);
+	static FName BuildStateName(const TArray<FNaiveStateContext>& StateStack);
 
 protected:
 	UPROPERTY(transient)
-	TMap<FNaiveStateMachineHandle, FNaiveStateMachineInstance> RunningStateMachines;
+	TMap<FNaiveStateMachineHandle, FNaiveStateMachineContext> RunningStateMachines;
 	
 	TMap <FNaiveStateMachineHandle, FNaiveEventQueue> PendingForwardEvents;
 };

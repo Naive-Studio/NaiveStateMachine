@@ -26,6 +26,7 @@ public:
 	UNaiveStateMachineEditorFactory();
 
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
+	virtual FString GetDefaultNewAssetName() const override;
 };
 
 class NAIVESTATEMACHINEEDITOR_API FStateMachineGraphPinFactory : public FGraphPanelPinFactory

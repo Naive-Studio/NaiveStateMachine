@@ -32,10 +32,10 @@ const FName UNaiveStateMachineGraphSchema::PC_Entry(TEXT("Entry"));
 
 UEdGraphNode* FNaiveEdGraphSchemaAction_NewStateNode::PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode /*= true*/)
 {
-	UEdGraphNode* ResultNode = NULL;
+	UEdGraphNode* ResultNode = nullptr;
 
 	// If there is a template, we actually use it
-	if (NodeTemplate != NULL)
+	if (NodeTemplate != nullptr)
 	{
 		const FScopedTransaction Transaction(NSLOCTEXT("UnrealEd", "K2_AddNode", "Add Node"));
 		ParentGraph->Modify();
@@ -45,7 +45,7 @@ UEdGraphNode* FNaiveEdGraphSchemaAction_NewStateNode::PerformAction(class UEdGra
 		}
 
 		// set outer to be the graph so it doesn't go away
-		NodeTemplate->Rename(NULL, ParentGraph);
+		NodeTemplate->Rename(nullptr, ParentGraph);
 		ParentGraph->AddNode(NodeTemplate, true, bSelectNewNode);
 
 		NodeTemplate->CreateNewGuid();
