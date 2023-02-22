@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "StateMachine/NaiveStateNode.h"
+#include "StateMachine/NaiveState.h"
 #include "NaiveStateNode_Blueprint.generated.h"
 
 /**

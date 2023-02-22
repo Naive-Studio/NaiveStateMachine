@@ -11,7 +11,7 @@
 #include "Kismet2/Kismet2NameValidators.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
-#include "StateMachine/NaiveStateNode.h"
+#include "StateMachine/NaiveState.h"
 #include "StateMachine/NaiveStateMachine.h"
 #include "EdGraph/EdGraph.h"
 #include "Widgets/Text/SInlineEditableTextBlock.h"

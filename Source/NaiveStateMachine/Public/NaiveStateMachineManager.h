@@ -9,7 +9,7 @@
 #include "NaiveStateMachineTypes.h"
 #include "NaiveStateMachineManager.generated.h"
 
-class UNaiveStateMachineObjectBase;
+class UNaiveSMNodeBase;
 class UNaiveStateMachine;
 class UNaiveStateNode;
 class UNaiveTransitionNode;
@@ -24,12 +24,6 @@ class NAIVESTATEMACHINE_API UNaiveStateMachineManager : public UGameInstanceSubs
 
 public:
 	UNaiveStateMachineManager(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-	/** Implement this for initialization of instances of the system */
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-	/** Implement this for deinitialization of instances of the system */
-	virtual void Deinitialize() override;
 	
 	FNaiveStateMachineHandle StartStateMachine(const FNaiveRunStateMachineRequest& InRequest);
 	void StopStateMachine(const FNaiveStateMachineHandle& InHandle);
@@ -46,11 +40,9 @@ public:
 	void GoToState(FNaiveStateMachineContext& StateMachineContext, UNaiveStateMachine* InStateMachine , const FName& NewState);
 	UNaiveStateNode* GetActiveState(const FNaiveStateMachineHandle& InHandle);
 
-	void SendEventToTransition(const FNaiveStateMachineHandle& InHandle, const FName& InEventName);
+	void PostEventToStateMachine(const FNaiveStateMachineHandle& InHandle, const FName& InEventName);
 
 protected:
-	void LoadStateMachine(FNaiveStateMachineContext& InstanceContext, const FNaiveRunStateMachineRequest& InRequest);
-
 	void InnerGoToState(FNaiveStateMachineContext& StatMachineContext,
 						UNaiveStateMachine* InStateMachine,
 						FName NewState, int32& InMemorySize);
@@ -61,5 +53,5 @@ protected:
 	UPROPERTY(transient)
 	TMap<FNaiveStateMachineHandle, FNaiveStateMachineContext> RunningStateMachines;
 	
-	TMap <FNaiveStateMachineHandle, FNaiveEventQueue> PendingForwardEvents;
+	TMap <FNaiveStateMachineHandle, FNaiveEventQueue> ReceivedEventMap;
 };

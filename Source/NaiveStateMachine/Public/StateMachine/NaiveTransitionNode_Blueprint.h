@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "StateMachine/NaiveTransitionNode.h"
+#include "StateMachine/NaiveTransition.h"
 #include "NaiveTransitionNode_Blueprint.generated.h"
 
 /**

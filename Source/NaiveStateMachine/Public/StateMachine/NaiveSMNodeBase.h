@@ -4,18 +4,34 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "NaiveStateMachineObjectBase.generated.h"
+#include "NaiveSMNodeBase.generated.h"
+
+USTRUCT()
+struct FNaiveNodeInstanceContext
+{
+	GENERATED_USTRUCT_BODY()
+
+	bool bInstanced = false;
+	
+	int32 MemoryOffset = -1;
+	
+	FORCEINLINE uint8* GetInstanceMemory(uint8* StateMachineMemory) const
+	{
+		return bInstanced ? nullptr :
+		(StateMachineMemory != nullptr ? (StateMachineMemory + MemoryOffset) : nullptr);
+	}
+};
 
 /**
  * 
  */
 UCLASS(abstract)
-class NAIVESTATEMACHINE_API UNaiveStateMachineObjectBase : public UObject
+class NAIVESTATEMACHINE_API UNaiveSMNodeBase : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UNaiveStateMachineObjectBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UNaiveSMNodeBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void Initialize(UObject* InOwnerObject, UWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, Category = "StateMachine")

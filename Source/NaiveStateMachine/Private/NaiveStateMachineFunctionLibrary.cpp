@@ -58,7 +58,7 @@ void UNaiveStateMachineFunctionLibrary::SendEventToStateMachine(UObject* Context
 
 	if (UNaiveStateMachineManager* SMManager = UNaiveStateMachineFunctionLibrary::GetStateMachineManager(ContextObject))
 	{
-		SMManager->SendEventToTransition(InHandle, EventName);
+		SMManager->PostEventToStateMachine(InHandle, EventName);
 	}
 }
 

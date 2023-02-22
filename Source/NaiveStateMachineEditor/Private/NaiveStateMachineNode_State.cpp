@@ -8,7 +8,7 @@
 #include "NaiveStateMachineGraphPin.h"
 #include "Kismet2/Kismet2NameValidators.h"
 
-#include "StateMachine/NaiveStateNode.h"
+#include "StateMachine/NaiveState.h"
 #include "Widgets/Text/SInlineEditableTextBlock.h"
 #include "SGraphPreviewer.h"
 

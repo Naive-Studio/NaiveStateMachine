@@ -3,7 +3,7 @@
 
 #include "NaiveStateMachineNode_Transition.h"
 #include "NaiveStateMachineNode_State.h"
-#include "StateMachine/NaiveTransitionNode.h"
+#include "StateMachine/NaiveTransition.h"
 
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/CompilerResultsLog.h"

@@ -3,8 +3,8 @@
 
 #include"StateMachine/NaiveStateMachine.h"
 
-#include "StateMachine/NaiveStateNode.h"
-#include "StateMachine/NaiveTransitionNode.h"
+#include "StateMachine/NaiveState.h"
+#include "StateMachine/NaiveTransition.h"
 
 class FName;
 
