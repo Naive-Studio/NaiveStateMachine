@@ -31,7 +31,7 @@ struct FNaiveTransitionContext : public FNaiveNodeInstanceContext
 	GENERATED_USTRUCT_BODY()
 
 public:
-	FORCEINLINE const FName& GetNextState() const
+	FORCEINLINE const FName GetNextState() const
 	{
 		return (TransitionConfig != nullptr) ? TransitionConfig->NextSate : NAME_None;
 	}
